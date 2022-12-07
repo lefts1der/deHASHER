@@ -18,9 +18,15 @@
     <ClCompile Include="deHASHER.c">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="md5_hash.c">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="md5_hash.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="chars_and_digits.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>

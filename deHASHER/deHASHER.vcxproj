@@ -140,8 +140,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="deHASHER.c" />
+    <ClCompile Include="md5_hash.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="chars_and_digits.h" />
     <ClInclude Include="md5_hash.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
