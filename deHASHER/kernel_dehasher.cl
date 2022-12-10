@@ -1,5 +1,14 @@
+#pragma OPENCL EXTENSION cl_khr_global_int32_base_atomics : enable
+#pragma OPENCL EXTENSION cl_khr_local_int32_base_atomics : enable
+#pragma OPENCL EXTENSION cl_khr_global_int64_base_atomics : enable
+#pragma OPENCL EXTENSION cl_khr_local_int64_base_atomics : enable
+
 __constant unsigned char CHARS[]= "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01234567890";
 
+//#define normal(X, B, S) (((X & B) >> S))
+unsigned char normal(unsigned int buffer, unsigned int bytes, unsigned char offset){
+    return (unsigned short)(((buffer & bytes) >> offset));
+}
 
 // Buffers for calculating
 #define A 0x67452301
@@ -13,13 +22,13 @@ __constant unsigned char CHARS[]= "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrs
 #define H(X, Y, Z) (X ^ Y ^ Z)
 #define I(X, Y, Z) (Y ^ (X | ~Z))
 
-__constant cl_uchar S[] = { 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22,
+__constant unsigned char S[] = { 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22,
                        5,  9, 14, 20, 5,  9, 14, 20, 5,  9, 14, 20, 5,  9, 14, 20,
                        4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23,
                        6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21, 6, 10, 15, 21 };
 
 // Array consts for each rounds
-__constant cl_uint K[] = { 0xd76aa478, 0xe8c7b756, 0x242070db, 0xc1bdceee,
+__constant unsigned int K[] = { 0xd76aa478, 0xe8c7b756, 0x242070db, 0xc1bdceee,
                        0xf57c0faf, 0x4787c62a, 0xa8304613, 0xfd469501,
                        0x698098d8, 0x8b44f7af, 0xffff5bb1, 0x895cd7be,
                        0x6b901122, 0xfd987193, 0xa679438e, 0x49b40821,
@@ -38,15 +47,14 @@ __constant cl_uint K[] = { 0xd76aa478, 0xe8c7b756, 0x242070db, 0xc1bdceee,
 
 
 
-__kernel void deHASH(__read_only unsigned char* input,
-                        __global unsigned char* result){
+__kernel void deHASH(__global  unsigned char* input, __global unsigned char* result){
 
-cl_ulong index = get_global_id(0);
+long index = get_global_id(0);
 if(index>=839299365868340224) return;
 
 
-cl_uchar length = 0;
-cl_uchar str[10];
+unsigned char length = 0;
+unsigned char str[10];
 for (int i=0; i<10; i++) str[i]='\0';
 do {
         str[length] = CHARS[index % 62];
@@ -57,7 +65,7 @@ do {
     } while (index != -1);
 length++;
 
-cl_uchar main_str[64];
+unsigned char main_str[64];
 
 // align_md
 for(int i=0; i<length; i++)main_str[i]=str[i];
@@ -69,28 +77,28 @@ main_str[56]=length*8;
 for(int i = 57; i<64; i++) main_str[i]=0;
 
 // main algorithm
-cl_uint buffers[4];
-buffers[0] = (cl_uint)A;
-buffers[1] = (cl_uint)B;
-buffers[2] = (cl_uint)C;
-buffers[3] = (cl_uint)D;
+unsigned int buffers[4];
+buffers[0] = (unsigned int)A;
+buffers[1] = (unsigned int)B;
+buffers[2] = (unsigned int)C;
+buffers[3] = (unsigned int)D;
 
-cl_uint AA = buffers[0];
-cl_uint BB = buffers[1];
-cl_uint CC = buffers[2];
-cl_uint DD = buffers[3];
+unsigned int AA = buffers[0];
+unsigned int BB = buffers[1];
+unsigned int CC = buffers[2];
+unsigned int DD = buffers[3];
 
-cl_uint X[16];
+unsigned int X[16];
 
 for(int j =0; j<16;j++){
     X[j]=0;
     for(int i=0; i<4;i++)
-    X[j]=(cl_uint)main_str[(j*16)+i]<<(i<<3);
+    X[j]=(unsigned int)main_str[(j*16)+i]<<(i<<3);
 }
 
-for (cl_uchar i = 0; i < 64; i++) {
-        cl_uint TMP;
-        cl_uchar k;
+for (unsigned char i = 0; i < 64; i++) {
+        unsigned int TMP;
+        unsigned char k;
 
         switch (i / 16)
         {
@@ -130,13 +138,19 @@ buffers[1] += BB;
 buffers[2] += CC;
 buffers[3] += DD;
 
-cl_uchar result_int[64];
-for(unsigned int i = 0; i < 4; ++i){
-		result_int[(i * 4) + 0] = (cl_uchar)((buffer[i] & 0x000000FF));
-		result_int[(i * 4) + 1] = (cl_uchar)((buffer[i] & 0x0000FF00) >>  8);
-		result_int[(i * 4) + 2] = (cl_uchar)((buffer[i] & 0x00FF0000) >> 16);
-		result_int[(i * 4) + 3] = (cl_uchar)((buffer[i] & 0xFF000000) >> 24);
+unsigned char result_int[16];
+
+for(unsigned int i = 0; i < 4; i++){
+        if((normal(buffers[i],0x000000FF, 0)  != input[i*4]) ||
+        (normal(buffers[i],0x0000FF00 , 8) != input[i*4 +1]) ||
+        (normal(buffers[i],0x00FF0000 , 16) != input[i*4 +2]) ||
+        (normal(buffers[i],0xFF000000 , 24) != input[i*4 +3])) return;
 	}
-for(int i =0; i<64; i++) if(result_int[i]!=input[i])return;
-for(int i=0;i<length;i++) result[i]=str[i];
+  
+ 
+  result[1]=12;              
+
+//for(int i =0; i<16; i++) if(result_int[i]!=input[i])return;
+//for(unsigned int i=0;i<10;i++) ;
+
 }
