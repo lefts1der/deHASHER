@@ -21,6 +21,9 @@
     <ClCompile Include="md5_hash.c">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="deHASHER_GPU.c">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="md5_hash.h">
@@ -29,5 +32,10 @@
     <ClInclude Include="chars_and_digits.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="kernel_dehasher.cl">
+      <Filter>Исходные файлы</Filter>
+    </None>
   </ItemGroup>
 </Project>
