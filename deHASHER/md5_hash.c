@@ -60,6 +60,7 @@ void hash(MD5* md5) {
 
     uint32_t X[16];
     memcpy(X, md5->ready_word, 64);
+    for (int i = 0; i < 16; i++)printf("%d\n", X[i]);
 
 
 
@@ -103,6 +104,11 @@ void hash(MD5* md5) {
     md5->buffers[1] += BB;
     md5->buffers[2] += CC;
     md5->buffers[3] += DD;
+    printf("%02x\n", md5->buffers[0]);
+    printf("%02x\n", md5->buffers[1]);
+    printf("%02x\n", md5->buffers[2]);
+    printf("%02x\n", md5->buffers[3]);
+
     
     normalize_hash(md5);
     

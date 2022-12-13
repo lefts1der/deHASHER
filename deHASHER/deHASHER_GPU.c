@@ -6,10 +6,18 @@
 
 #include <CL/cl.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 
 #define source_file "C:\\Users\\vilda\\source\\repos\\deHASHER\\deHASHER\\kernel_dehasher.cl"
+#define UNKNOWN_HASH "9d231cb3e6dd0a4fd016818441a42915"
+
+bool check_str(unsigned char* str) {
+	for (int i = 0; i < 10; i++)if (str[i])return true;
+	return false;
+}
 
 char* readSource(const char* sourceFilename) {
 
@@ -61,13 +69,14 @@ char* readSource(const char* sourceFilename) {
 }
 
 void main() {
+
 	int deviceCount = 0;
 	int multiCount = 1;
 	cl_int status;
 	long long pwd_count = 0;
-	const uint64_t BLOCK_SIZE = 1073741824;
-	const uint64_t BLOCKS = 1073741824;
-	const uint64_t DEMENSION = 100;
+	const uint64_t BLOCKS = 327851314792321;
+	const uint64_t BLOCK_SIZE = 2560;
+
 
 #ifdef AMD_GPU
 	_putenv("GPU_DUMP_DEVICE_KERNEL=3");
@@ -201,7 +210,7 @@ void main() {
 		printf("clCreateContext failed\n");
 		exit(-1);
 	}
-
+	
 	cl_command_queue cmdQueue;
 	cmdQueue = clCreateCommandQueueWithProperties(context, devices[0], 0, &status);
 	if (status != CL_SUCCESS || cmdQueue == NULL)
@@ -227,18 +236,30 @@ void main() {
 	cl_int buildErr;
 	const char* options = "-D " AMD_NVIDIA "_GPU";
 
-	unsigned char input[16] = {
-		0x79, 0xaf, 0x87, 0x72,
-		0x3d, 0xc2, 0x95, 0xf9,
-		0x5b, 0xdb, 0x27, 0x7a,
-		0x61, 0x18, 0x9a, 0x2a
-	};
+	unsigned char hash[32] = UNKNOWN_HASH;
 
+	uint32_t input[4];
+	for (int i = 0; i < 4; i++) {
+		unsigned char abc[8];
+		for (int j = 0; j < 8; j += 2) {
+			abc[j] = hash[(i + 1) * 8 - j - 2];
+			abc[j + 1] = hash[(i + 1) * 8 - j - 1];
+		}
+		input[i] = strtoll(abc, NULL, 16);
+		memset(abc, 0, 8);
+	}
+	for (unsigned int i = 0; i < 4; i++) {
+
+		printf("%02x", input[i]);
+	}
+	printf("\n");
 	unsigned char* out=( char*)malloc(10*sizeof( char));
+	unsigned long long offset = 0;
 	cl_mem DeviceMemInput = clCreateBuffer(context, CL_MEM_READ_ONLY |
-		CL_MEM_COPY_HOST_PTR, 16 * sizeof(unsigned char), input, 0);
+		CL_MEM_COPY_HOST_PTR, 4 * sizeof(uint32_t), input, 0);
 	cl_mem DeviceMemOutput = clCreateBuffer(context, CL_MEM_WRITE_ONLY |
 		CL_MEM_COPY_HOST_PTR, 10 * sizeof(unsigned char), out, 0);
+
 
 	buildErr = clBuildProgram(program, numDevices, devices, 0, NULL, NULL);
 
@@ -285,13 +306,16 @@ void main() {
 	
 	status = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void*)&DeviceMemInput);
 	status = clSetKernelArg(kernel, 1, sizeof(cl_mem), (void*)&DeviceMemOutput);
-
-	cl_event ndrEvent;
-	clEnqueueNDRangeKernel(cmdQueue, kernel, 1, 0, &DEMENSION,
-		0, 0, 0, &ndrEvent);
-	status = clWaitForEvents(1, &ndrEvent);
-	status = clEnqueueReadBuffer(cmdQueue, DeviceMemOutput, CL_TRUE, 0,
-		10 * sizeof(unsigned char), out, 0, 0, 0);
+	for (uint64_t i = 0; i < BLOCKS; i++) {
+		offset = i * BLOCK_SIZE;
+		clSetKernelArg(kernel, 2, sizeof(cl_ulong), &offset);
+		status = clEnqueueNDRangeKernel(cmdQueue, kernel, 1, 0, &BLOCK_SIZE,
+			0, 0, 0, NULL);
+		status = clEnqueueReadBuffer(cmdQueue, DeviceMemOutput, CL_TRUE, 0,
+			10 * sizeof(unsigned char), out, 0, 0, 0);
+		if (out[0] != 205)break;
+	}
+	
 	printf("%s", out);
 	clReleaseKernel(kernel);
 	clReleaseProgram(program);
