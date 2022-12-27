@@ -146,6 +146,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="deHASHER.c" />
+    <ClCompile Include="deHASHER_CPU.c" />
     <ClCompile Include="deHASHER_GPU.c" />
     <ClCompile Include="md5_hash.c" />
   </ItemGroup>
@@ -154,7 +155,10 @@
     <ClInclude Include="md5_hash.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="kernel_dehasher.cl" />
+    <Text Include="kernel_dehasher.cl">
+      <FileType>Document</FileType>
+      <DeploymentContent>true</DeploymentContent>
+    </Text>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
