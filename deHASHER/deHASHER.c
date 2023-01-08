@@ -126,7 +126,7 @@ void print_info() {
 	printf("  -h TEXT \t The string of the hash to be dehashed. Only hex record. Required parameter.\n");
 	printf("  -d TEXT [CPU/GPU] \t The device on which the dehashing is performed \
 [default: CPU]\n");
-	printf("  -b NUMBER \t The count of blocks to be iterated on GPU. \
+	printf("  -b NUMBER \t The count of blocks to be iterated on GPU. Count of attempts to dehash depend on this arg. \
 Require to select GPU. [default: 40495468725]\n");
 	printf("  -t NUMBER \t The count of threads in one block. \
 Require to select GPU. [default: 40495468725]\n");

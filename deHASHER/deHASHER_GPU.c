@@ -14,12 +14,8 @@
 #define SOURCE_FILE "C:\\Users\\vilda\\source\\repos\\deHASHER\\deHASHER\\kernel_dehasher.cl"
 
 
-bool check_str(unsigned char* str) {
-	for (int i = 0; i < 10; i++)if (str[i])return true;
-	return false;
-}
 
-char* readSource(const char* sourceFilename) {
+static char* readSource(const char* sourceFilename) {
 
 	FILE* fp;
 	int err;
